@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import HeaderImage from '../../../assets/HeaderInvoice.jpeg';
+import HeaderImage from '../../../assets/HeaderReturninvoice.PNG';
 import FooterImage from '../../../assets/footer.PNG'; // 👈 Add this line
 
 const InvoicePreview = ({ invoiceData, signature, onEdit, onClose }) => {

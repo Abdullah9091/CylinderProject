@@ -22,11 +22,20 @@ const NewSaleForm = ({ onClose }) => {
 
   const addProductToList = () => {
     if (!selectedProduct || !quantity) return;
+
     const price = selectedProduct === 'Cooking Gas Cylinder' ? 57.75 : 75.0;
+    const newProduct = {
+      id: uuidv4(),
+      name: selectedProduct,
+      quantity: Number(quantity),
+      price
+    };
+
     setFormData((prev) => ({
       ...prev,
-      products: [...prev.products, { name: selectedProduct, quantity: Number(quantity), price }]
+      products: [...prev.products, newProduct]
     }));
+
     setSelectedProduct('');
     setQuantity(1);
   };
@@ -37,7 +46,8 @@ const NewSaleForm = ({ onClose }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const total = calculateTotal();
-    const due = total - parseFloat(formData.paid || 0);
+    const paid = parseFloat(formData.paid || 0);
+    const due = total - paid;
     const status = due <= 0 ? 'paid' : 'partial';
 
     const sale = {
@@ -69,8 +79,10 @@ const NewSaleForm = ({ onClose }) => {
               required
             >
               <option value="">Select Customer</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.name}>{c.name}</option>
+              {customers.map((c, index) => (
+                <option key={c.id || `${c.name}-${index}`} value={c.name}>
+                  {c.name}
+                </option>
               ))}
             </select>
 
@@ -91,7 +103,9 @@ const NewSaleForm = ({ onClose }) => {
             >
               <option value="">Select Product</option>
               {productsList.map((prod) => (
-                <option key={prod} value={prod}>{prod}</option>
+                <option key={prod} value={prod}>
+                  {prod}
+                </option>
               ))}
             </select>
             <input
@@ -112,10 +126,12 @@ const NewSaleForm = ({ onClose }) => {
 
           {formData.products.length > 0 && (
             <div className="border rounded p-2 text-sm">
-              {formData.products.map((item, i) => (
-                <div key={i} className="flex justify-between py-1">
+              {formData.products.map((item) => (
+                <div key={item.id} className="flex justify-between py-1">
                   <span>{item.name} x {item.quantity}</span>
-                  <span className="text-gray-600">AED {(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="text-gray-600">
+                    AED {(item.price * item.quantity).toFixed(2)}
+                  </span>
                 </div>
               ))}
               <div className="flex justify-between font-semibold pt-2 border-t mt-2">
@@ -143,7 +159,6 @@ const NewSaleForm = ({ onClose }) => {
             />
           </div>
 
-          {/* ✅ Due Amount Field */}
           <div className="grid grid-cols-2 gap-4">
             <input
               type="text"
@@ -155,7 +170,9 @@ const NewSaleForm = ({ onClose }) => {
           </div>
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+            <button type="button" onClick={onClose} className="bg-gray-300 px-4 py-2 rounded">
+              Cancel
+            </button>
             <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Create Sale
             </button>

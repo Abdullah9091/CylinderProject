@@ -10,12 +10,9 @@ import {
   fetchPurchases,
 } from '../../../features/Purchases/PurchasesSlice';
 import { fetchSuppliers } from '../../../features/suppliers/suppliersSlice';
-import SupplierProducts from './SupplierProduct';
 import { MdOutlineCheck } from "react-icons/md";
 import { IoEyeOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
-
-
 
 const App = () => {
   const dispatch = useDispatch();
@@ -25,6 +22,13 @@ const App = () => {
   const [supplier, setSupplier] = useState('');
   const [expectedDelivery, setExpectedDelivery] = useState('');
   const [notes, setNotes] = useState('');
+  const [selectedGas, setSelectedGas] = useState('');
+
+  // New Fields
+  const [gasKg, setGasKg] = useState('');
+  const [gasPricePerKg, setGasPricePerKg] = useState('');
+  const [cylinderCount, setCylinderCount] = useState('');
+  const [cylinderPrice, setCylinderPrice] = useState('');
 
   useEffect(() => {
     dispatch(fetchSuppliers());
@@ -41,15 +45,28 @@ const App = () => {
       total: 'AED 0.00',
       status: 'pending',
       notes,
+      gasType: selectedGas,
+      gasKg: selectedGas === 'Gas' ? gasKg : null,
+      gasPricePerKg: selectedGas === 'Gas' ? gasPricePerKg : null,
+      cylinderCount: selectedGas === 'Cylinder' ? cylinderCount : null,
+      cylinderPrice: selectedGas === 'Cylinder' ? cylinderPrice : null,
     };
     dispatch(addPurchase(newPurchase));
+
+    // Reset form fields
     setSupplier('');
     setExpectedDelivery('');
     setNotes('');
+    setSelectedGas('');
+    setGasKg('');
+    setGasPricePerKg('');
+    setCylinderCount('');
+    setCylinderPrice('');
   };
 
   return (
     <div className="min-h-screen bg-white p-6 relative">
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Purchase Management</h1>
@@ -63,6 +80,7 @@ const App = () => {
         </button>
       </div>
 
+      {/* TABS */}
       <div className="flex space-x-4 mb-4">
         <button
           onClick={() => dispatch(setActiveTab('orders'))}
@@ -70,15 +88,11 @@ const App = () => {
         >
           Purchase Orders
         </button>
-        <button
-          onClick={() => dispatch(setActiveTab('suppliers'))}
-          className={`px-4 py-2 rounded font-medium ${activeTab === 'suppliers' ? 'bg-gray-200' : 'text-gray-500'}`}
-        >
-          Supplier Products
-        </button>
+        
       </div>
 
-      {activeTab === 'orders' ? (
+      {/* TABLE */}
+      
         <div className="bg-white border rounded p-4">
           <h2 className="text-xl font-semibold mb-1">Purchase Orders</h2>
           <p className="text-sm text-gray-500 mb-4">All purchase orders and their status</p>
@@ -120,7 +134,6 @@ const App = () => {
                       onClick={() => dispatch(setSelectedPurchase(po))}
                     >
                       <IoEyeOutline />
-
                     </button>
                     {po.status === 'pending' && (
                       <button
@@ -135,7 +148,6 @@ const App = () => {
                       onClick={() => dispatch(removePurchase(po.id))}
                     >
                       <RxCross2 />
-
                     </button>
                   </td>
                 </tr>
@@ -143,12 +155,10 @@ const App = () => {
             </tbody>
           </table>
         </div>
-      ) : (
-        <div className="p-4 border rounded bg-gray-50">
-          <SupplierProducts />
-        </div>
-      )}
+      
+      
 
+      {/* VIEW PURCHASE MODAL */}
       {selectedPurchase && (
         <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
@@ -165,13 +175,26 @@ const App = () => {
             <p><strong>Expected Delivery:</strong> {selectedPurchase.expectedDelivery}</p>
             <p><strong>Total:</strong> {selectedPurchase.total}</p>
             <p><strong>Status:</strong> {selectedPurchase.status}</p>
+            <p><strong>Purchase Type:</strong> {selectedPurchase.gasType || 'N/A'}</p>
             <p><strong>Notes:</strong> {selectedPurchase.notes || 'None'}</p>
+            {selectedPurchase.gasType === 'Gas' && (
+  <p>
+    <strong>Gas Details:</strong> {selectedPurchase.gasKg} KG @ AED {selectedPurchase.gasPricePerKg}/KG
+  </p>
+)}
+
+{selectedPurchase.gasType === 'Cylinder' && (
+  <p>
+    <strong>Cylinder Details:</strong> {selectedPurchase.cylinderCount} units @ AED {selectedPurchase.cylinderPrice}/Cylinder
+  </p>
+)}
           </div>
         </div>
       )}
 
+      {/* FORM MODAL */}
       {showForm && (
-        <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
             <button
               onClick={() => dispatch(toggleForm())}
@@ -181,6 +204,7 @@ const App = () => {
             </button>
             <h3 className="text-lg font-bold mb-4">New Purchase Order</h3>
             <form onSubmit={handleSubmit}>
+              {/* Supplier */}
               <div className="mb-3">
                 <label className="block text-sm font-medium mb-1">Supplier</label>
                 <select
@@ -197,6 +221,8 @@ const App = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Expected Delivery */}
               <div className="mb-3">
                 <label className="block text-sm font-medium mb-1">Expected Delivery Date</label>
                 <input
@@ -207,6 +233,81 @@ const App = () => {
                   required
                 />
               </div>
+
+              {/* Purchase Type */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Purchase Type</label>
+                <select
+                  value={selectedGas}
+                  onChange={(e) => {
+                    setSelectedGas(e.target.value);
+                    setGasKg('');
+                    setGasPricePerKg('');
+                    setCylinderCount('');
+                    setCylinderPrice('');
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                >
+                  <option value="">Select type</option>
+                  <option value="Gas">Gas</option>
+                  <option value="Cylinder">Cylinder</option>
+                </select>
+              </div>
+
+              {/* Gas Fields */}
+              {selectedGas === 'Gas' && (
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Gas KG</label>
+                    <input
+                      type="number"
+                      value={gasKg}
+                      onChange={(e) => setGasKg(e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Price per KG</label>
+                    <input
+                      type="number"
+                      value={gasPricePerKg}
+                      onChange={(e) => setGasPricePerKg(e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Cylinder Fields */}
+              {selectedGas === 'Cylinder' && (
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Cylinder Count</label>
+                    <input
+                      type="number"
+                      value={cylinderCount}
+                      onChange={(e) => setCylinderCount(e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Price per Cylinder</label>
+                    <input
+                      type="number"
+                      value={cylinderPrice}
+                      onChange={(e) => setCylinderPrice(e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Notes (optional)</label>
                 <textarea
@@ -216,6 +317,7 @@ const App = () => {
                   rows={3}
                 />
               </div>
+
               <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
                 Submit
               </button>

@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import HeaderImage from '../../../assets/HeaderInvoice.jpeg';
-import FooterImage from '../../../assets/footer.PNG'; // 👈 Add this line
+import HeaderImage from '../../../assets/HeaderRecievinginvoice.PNG'; // Make sure this path is correct
 
 const InvoicePreview = ({ invoiceData, signature, onEdit, onClose }) => {
   const invoiceRef = useRef(null);
@@ -163,11 +162,6 @@ const InvoicePreview = ({ invoiceData, signature, onEdit, onClose }) => {
             ) : (
               <p style={{ color: '#666', fontStyle: 'italic' }}>No signature captured.</p>
             )}
-          </div>
-
-          {/* Footer Image */}
-          <div style={{ marginTop: '40px' }}>
-            <img src={FooterImage} alt="Footer" style={{ width: '100%', height: 'auto' }} />
           </div>
         </div>
 

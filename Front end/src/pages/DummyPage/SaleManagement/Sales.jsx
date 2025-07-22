@@ -7,8 +7,6 @@ import InvoicePreview from './InvoicePreview';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { TfiReceipt } from "react-icons/tfi";
 
-
-
 const GasSales = () => {
   const dispatch = useDispatch();
   const sales = useSelector((state) => state.sales.sales);
@@ -59,8 +57,8 @@ const GasSales = () => {
             </tr>
           </thead>
           <tbody>
-            {sales.map((s) => (
-              <tr key={s.id} className="border-b hover:bg-gray-50">
+            {sales.map((s, index) => (
+              <tr key={s.id || s.invoice || index} className="border-b hover:bg-gray-50">
                 <td className="p-2 font-medium">{s.invoice}</td>
                 <td className="p-2">{s.customer}</td>
                 <td className="p-2">{s.date}</td>
@@ -94,7 +92,6 @@ const GasSales = () => {
                     }}
                   >
                     <TfiReceipt />
-
                   </button>
                   <button
                     onClick={() => dispatch(deleteSale(s.id))}
@@ -102,7 +99,6 @@ const GasSales = () => {
                     title="Delete"
                   >
                     <RiDeleteBin6Line />
-
                   </button>
                 </td>
               </tr>

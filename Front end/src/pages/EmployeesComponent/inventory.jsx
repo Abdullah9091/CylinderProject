@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { receiveInventory } from '../../../features/InventoryManagement/Inventory';
+import { receiveInventory } from '../../features/InventoryManagement/Inventory';
 
-const Inventory = () => {
+const InventoryManagement = () => {
   const dispatch = useDispatch();
   const receipts = useSelector((state) => state.inventory.receipts);
   const inventory = useSelector((state) => state.inventory.inventory);
@@ -86,4 +86,4 @@ const Inventory = () => {
   );
 };
 
-export default Inventory;
+export default InventoryManagement;

@@ -3,38 +3,54 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5000/api/purchases';
 
-// Thunks
+// ============================
+// ✅ Async Thunks
+// ============================
+
+// Fetch all purchase orders
 export const fetchPurchases = createAsyncThunk('purchase/fetchPurchases', async () => {
   const response = await axios.get(BASE_URL);
   return response.data;
 });
 
+// Add a new purchase order
 export const addPurchase = createAsyncThunk('purchase/addPurchase', async (newPurchase) => {
   const response = await axios.post(BASE_URL, newPurchase);
   return response.data;
 });
 
+// Approve a purchase order
 export const approvePurchase = createAsyncThunk('purchase/approvePurchase', async (id) => {
   const response = await axios.patch(`${BASE_URL}/${id}/approve`);
-  return response.data; // assumes backend returns updated purchase
+  return response.data;
 });
 
+// Delete a purchase order
 export const removePurchase = createAsyncThunk('purchase/removePurchase', async (id) => {
   await axios.delete(`${BASE_URL}/${id}`);
   return id;
 });
 
-// Slice
+// ============================
+// ✅ Initial State
+// ============================
+
+const initialState = {
+  showForm: false,
+  activeTab: 'orders', // or 'history', etc.
+  selectedPurchase: null,
+  purchases: [],
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
+};
+
+// ============================
+// ✅ Slice
+// ============================
+
 const purchaseSlice = createSlice({
   name: 'purchase',
-  initialState: {
-    showForm: false,
-    activeTab: 'orders',
-    selectedPurchase: null,
-    purchases: [],
-    status: 'idle',
-    error: null,
-  },
+  initialState,
   reducers: {
     toggleForm: (state) => {
       state.showForm = !state.showForm;
@@ -48,7 +64,7 @@ const purchaseSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch
+      // 🔄 Fetch Purchases
       .addCase(fetchPurchases.pending, (state) => {
         state.status = 'loading';
       })
@@ -61,28 +77,31 @@ const purchaseSlice = createSlice({
         state.error = action.error.message;
       })
 
-      // Add
+      // ➕ Add Purchase
       .addCase(addPurchase.fulfilled, (state, action) => {
         state.purchases.push(action.payload);
         state.showForm = false;
       })
 
-      // Approve
+      // ✅ Approve Purchase
       .addCase(approvePurchase.fulfilled, (state, action) => {
-        const index = state.purchases.findIndex((p) => p.id === action.payload.id);
+        const index = state.purchases.findIndex(p => p.id === action.payload.id);
         if (index !== -1) {
           state.purchases[index] = action.payload;
         }
       })
 
-      // Remove
+      // ❌ Delete Purchase
       .addCase(removePurchase.fulfilled, (state, action) => {
-        state.purchases = state.purchases.filter((p) => p.id !== action.payload);
+        state.purchases = state.purchases.filter(p => p.id !== action.payload);
       });
   },
 });
 
-// Export actions and reducer
+// ============================
+// ✅ Export Actions and Reducer
+// ============================
+
 export const {
   toggleForm,
   setActiveTab,

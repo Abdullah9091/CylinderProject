@@ -14,7 +14,7 @@ import {
 
 const Sidebar = () => {
   const sidebarOpen = useSelector((state) => state.ui.sidebarOpen);
-  const role = useSelector((state) => state.auth.user?.role); // Get role from auth
+  const role = useSelector((state) => state.auth.user?.role);
 
   if (!sidebarOpen) return null;
 
@@ -33,17 +33,29 @@ const Sidebar = () => {
           <>
             <SidebarLink icon={<FiShoppingCart />} label="Suppliers" to="/suppliers" />
             <SidebarLink icon={<FiBox />} label="Purchases" to="/purchases" />
-            <SidebarLink icon={<FiActivity />} label="Inventory" to="/inventory" />
+            <SidebarLink icon={<FiActivity />} label="Inventory" to="/inventorysys" />
             <SidebarLink icon={<FiUsers />} label="Customers" to="/customers" />
             <SidebarLink icon={<FiTrendingUp />} label="Gas Sales" to="/gas-sales" />
             <SidebarLink icon={<FiBox />} label="Cylinders" to="/cylinders" />
-            <SidebarLink icon={<FiUsers />} label="Employees" to="/employees" />
           </>
         )}
 
-        {/* Shared Links (Admin + Employee) */}
-        <SidebarLink icon={<FiFileText />} label="Reports" to="/reports" />
-        <SidebarLink icon={<FiPieChart />} label="P&L" to="/pl" />
+        {/* Shared Links for Admin and Employee */}
+        {['admin', 'employee'].includes(role) && (
+          <>
+            <SidebarLink icon={<FiActivity />} label="Inventory"
+                          to={role === 'admin' ? '/inventory' : '/inventorysys'}
+
+              />
+            <SidebarLink
+              icon={<FiUsers />}
+              label="Employees"
+              to={role === 'admin' ? '/employees' : '/employee-management'}
+            />
+            <SidebarLink icon={<FiFileText />} label="Reports" to="/reports" />
+            <SidebarLink icon={<FiPieChart />} label="P&L" to="/pl" />
+          </>
+        )}
       </nav>
     </aside>
   );

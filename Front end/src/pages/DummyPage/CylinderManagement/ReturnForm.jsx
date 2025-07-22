@@ -8,17 +8,26 @@ const ReturnForm = ({ onClose }) => {
 
   const [selectedDepositId, setSelectedDepositId] = useState('');
 
-  const selectedDeposit = deposits.find((d) => d.id === selectedDepositId);
+  const selectedDeposit = deposits.find((d) => d._id === selectedDepositId); // ✅ Use _id
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedDeposit) return;
-    dispatch(addReturn({ ...selectedDeposit, returnDate: new Date().toISOString().split('T')[0] }));
+
+    // ✅ Clean return payload
+    const returnData = {
+      customer: selectedDeposit.customer,
+      cylinderType: selectedDeposit.cylinderType,
+      quantity: selectedDeposit.quantity,
+      returnDate: new Date().toISOString().split('T')[0],
+    };
+
+    dispatch(addReturn(returnData));
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-start pt-10 z-30">
+    <div className="fixed inset-0 bg-black/80 flex justify-center items-start pt-10 z-30">
       <div className="bg-white p-6 rounded shadow-md w-full max-w-lg">
         <h2 className="text-xl font-semibold mb-4">Return Cylinder</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -30,7 +39,7 @@ const ReturnForm = ({ onClose }) => {
           >
             <option value="">Select Active Deposit</option>
             {deposits.map((d) => (
-              <option key={d.id} value={d.id}>
+              <option key={d._id} value={d._id}>
                 {d.customer} - {d.cylinderType} x {d.quantity}
               </option>
             ))}
@@ -43,8 +52,12 @@ const ReturnForm = ({ onClose }) => {
           )}
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Proceed Return</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
+              Cancel
+            </button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+              Proceed Return
+            </button>
           </div>
         </form>
       </div>

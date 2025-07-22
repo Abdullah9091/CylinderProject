@@ -1,42 +1,73 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+export const fetchSales = createAsyncThunk('sales/fetchSales', async () => {
+  const response = await axios.get('http://localhost:5000/api/sales');
+  return response.data;
+});
+
+export const addSale = createAsyncThunk(
+  'sales/addSale',
+  async (saleData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/sales', saleData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
 
 const initialState = {
-  sales: [
-    {
-      id: '1',
-      invoice: 'INV-2024-001',
-      customer: 'Ahmed Al Mansouri',
-      date: '2024-01-15',
-      products: [
-        { name: 'Cooking Gas Cylinder', quantity: 2, price: 57.75 }
-      ],
-      total: 115.50,
-      paid: 100.50,
-      due: 0,
-      status: 'paid',
-      note: ''
-    }
-  ]
+  sales: [],
+  status: 'idle', 
+  error: null,
 };
 
 const salesSlice = createSlice({
   name: 'sales',
   initialState,
   reducers: {
-    addSale: (state, action) => {
-      state.sales.push(action.payload);
-    },
     deleteSale: (state, action) => {
-      state.sales = state.sales.filter(sale => sale.id !== action.payload);
+      state.sales = state.sales.filter((sale) => sale.id !== action.payload);
     },
+
     updateSale: (state, action) => {
-      const index = state.sales.findIndex(sale => sale.id === action.payload.id);
+      const index = state.sales.findIndex((sale) => sale.id === action.payload.id);
       if (index !== -1) {
         state.sales[index] = action.payload;
       }
-    }
-  }
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+
+      .addCase(fetchSales.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchSales.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.sales = action.payload;
+      })
+      .addCase(fetchSales.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+
+      .addCase(addSale.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(addSale.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.sales.push(action.payload); 
+      })
+      .addCase(addSale.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to add sale';
+      });
+  },
 });
 
-export const { addSale, deleteSale, updateSale } = salesSlice.actions;
+export const { deleteSale, updateSale } = salesSlice.actions;
+
 export default salesSlice.reducer;

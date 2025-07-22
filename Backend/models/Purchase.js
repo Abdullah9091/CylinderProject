@@ -7,7 +7,12 @@ const purchaseSchema = new mongoose.Schema({
   expectedDelivery: String,
   total: String,
   status: { type: String, default: 'pending' },
-  notes: String
+  notes: String,
+  gasType: String,
+  gasKg: Number,
+  gasPricePerKg: Number,
+  cylinderCount: Number,
+  cylinderPrice: Number,
 });
 
 export default mongoose.model('Purchase', purchaseSchema);

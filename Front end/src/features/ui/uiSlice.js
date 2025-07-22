@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   sidebarOpen: true,
-  currentTab: 'dashboard', // add a tab state if needed
+  currentTab: 'dashboard', 
 };
 
 const uiSlice = createSlice({
