@@ -35,13 +35,14 @@ const AppRoutes = () => (
     <Route path="/cylinders" element={<ProtectedRoute allowedRoles={['admin']}><CylinderManagement /></ProtectedRoute>} />
     <Route path="/employees" element={<ProtectedRoute allowedRoles={['admin']}><EmployeeManagement /></ProtectedRoute>} />
         <Route path="/inventory" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><InventoryManagement /></ProtectedRoute>} />
+    <Route path="/reports" element={<ProtectedRoute allowedRoles={[ 'admin']}><Dummy /></ProtectedRoute>} />
 
 
     {/* Shared (Admin + Employee) Routes */}
-    <Route path="/inventorysys" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><InventoryManagement /></ProtectedRoute>} />
-    <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><Dummy /></ProtectedRoute>} />
-    <Route path="/employee-management" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><EmployeeManagement /></ProtectedRoute>} />
-    <Route path="/pl" element={<ProtectedRoute allowedRoles={['admin', 'employee']}><Dummy /></ProtectedRoute>} />
+    <Route path="/inventorysys" element={<ProtectedRoute allowedRoles={[ 'employee']}><InventoryManagement /></ProtectedRoute>} />
+    <Route path="/reports" element={<ProtectedRoute allowedRoles={[ 'employee']}><Dummy /></ProtectedRoute>} />
+    <Route path="/employee-management" element={<ProtectedRoute allowedRoles={[ 'employee']}><EmployeeManagement /></ProtectedRoute>} />
+    <Route path="/pl" element={<ProtectedRoute allowedRoles={[ 'employee']}><Dummy /></ProtectedRoute>} />
 
     {/* Fallback 404 */}
     <Route path="*" element={<div className="p-6 text-red-600 text-xl">404 - Page Not Found</div>} />

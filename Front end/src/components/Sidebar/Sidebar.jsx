@@ -33,15 +33,17 @@ const Sidebar = () => {
           <>
             <SidebarLink icon={<FiShoppingCart />} label="Suppliers" to="/suppliers" />
             <SidebarLink icon={<FiBox />} label="Purchases" to="/purchases" />
-            <SidebarLink icon={<FiActivity />} label="Inventory" to="/inventorysys" />
+            <SidebarLink icon={<FiActivity />} label="Inventory" to="/inventory" />
             <SidebarLink icon={<FiUsers />} label="Customers" to="/customers" />
             <SidebarLink icon={<FiTrendingUp />} label="Gas Sales" to="/gas-sales" />
             <SidebarLink icon={<FiBox />} label="Cylinders" to="/cylinders" />
+                        <SidebarLink icon={<FiFileText />} label="Reports" to="/reports" />
+
           </>
         )}
 
         {/* Shared Links for Admin and Employee */}
-        {['admin', 'employee'].includes(role) && (
+        {[ 'employee'].includes(role) && (
           <>
             <SidebarLink icon={<FiActivity />} label="Inventory"
                           to={role === 'admin' ? '/inventory' : '/inventorysys'}

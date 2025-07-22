@@ -1,55 +1,154 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { receiveInventory } from '../../../features/InventoryManagement/Inventory';
+import { fetchPurchases } from '../../../features/Purchases/PurchasesSlice';
+import { fetchSales } from '../../../features/SalesSlice/Sales';
 
 const Inventory = () => {
   const dispatch = useDispatch();
-  const receipts = useSelector((state) => state.inventory.receipts);
-  const inventory = useSelector((state) => state.inventory.inventory);
+  const purchases = useSelector((state) => state.purchase.purchases);
+  const purchaseStatus = useSelector((state) => state.purchase.status);
+  const purchaseError = useSelector((state) => state.purchase.error);
 
-  const pendingReceipts = receipts.filter((r) => !r.received);
+  const sales = useSelector((state) => state.sales?.sales || []);
+  const salesStatus = useSelector((state) => state.sales.status);
+  const salesError = useSelector((state) => state.sales.error);
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (purchaseStatus === 'idle') dispatch(fetchPurchases());
+    if (salesStatus === 'idle') dispatch(fetchSales());
+  }, [dispatch, purchaseStatus, salesStatus]);
+
+  // Show loading state
+  if (purchaseStatus === 'loading' || salesStatus === 'loading') {
+    return <div className="p-6 text-gray-600">Loading inventory data...</div>;
+  }
+
+  // Show error state
+  if (purchaseStatus === 'failed' || salesStatus === 'failed') {
+    return (
+      <div className="p-6 text-red-600">
+        Error loading data:
+        <div>{purchaseError || 'Purchase error not specified'}</div>
+        <div>{salesError || 'Sales error not specified'}</div>
+      </div>
+    );
+  }
+
+  // Group approved purchases
+  const groupedPurchases = purchases
+    .filter((p) => p.approved)
+    .reduce((acc, purchase) => {
+      const key = purchase.code;
+      if (!acc[key]) {
+        acc[key] = {
+          product: purchase.product,
+          code: purchase.code,
+          category: purchase.category,
+          supplier: purchase.supplier,
+          purchasePrice: purchase.purchasePrice,
+          purchaseQty: purchase.quantity,
+          saleQty: 0,
+          stock: purchase.quantity,
+          purchaseHistory: [{ date: purchase.date, quantity: purchase.quantity }],
+          saleHistory: [],
+        };
+      } else {
+        acc[key].purchaseQty += purchase.quantity;
+        acc[key].stock += purchase.quantity;
+        acc[key].purchaseHistory.push({ date: purchase.date, quantity: purchase.quantity });
+      }
+      return acc;
+    }, {});
+
+  // Subtract sold quantities
+  sales
+    .filter((s) => s.approved)
+    .forEach((sale) => {
+      const key = sale.code;
+      if (groupedPurchases[key]) {
+        groupedPurchases[key].saleQty += sale.quantity;
+        groupedPurchases[key].stock -= sale.quantity;
+        groupedPurchases[key].saleHistory.push({ date: sale.date, quantity: sale.quantity });
+      }
+    });
+
+  const inventoryList = Object.values(groupedPurchases);
+
+  const filteredInventory = inventoryList.filter(
+    (item) =>
+      item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalStock = inventoryList.reduce((sum, item) => sum + item.stock, 0);
 
   return (
     <div className="min-h-screen bg-white p-6">
       <h1 className="text-2xl font-bold mb-1">Inventory Management</h1>
-      <p className="text-gray-500 mb-6">Manage your gas and cylinder inventory</p>
+      <p className="text-gray-500 mb-6">Track and manage your cylinder and gas stock</p>
 
-      {/* CURRENT INVENTORY */}
-      <div className="border rounded p-4 mb-6">
-        <h2 className="text-xl font-semibold">Current Inventory</h2>
-        <p className="text-sm text-gray-500 mb-4">All products in stock with pricing and availability</p>
+      {/* Search and Total Stock */}
+      <div className="flex justify-between items-center mb-4">
+        <input
+          type="text"
+          placeholder="Search by product or category..."
+          className="border px-3 py-2 rounded shadow-sm w-72"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <div className="text-sm text-gray-600">
+          <strong>Total Stock:</strong> {totalStock} units
+        </div>
+      </div>
+
+      {/* Inventory Table */}
+      <div className="border rounded p-4 bg-gray-50 shadow">
+        <h2 className="text-xl font-semibold mb-2">Current Inventory</h2>
+        <p className="text-sm text-gray-500 mb-4">Based on approved purchases and sales</p>
 
         <table className="min-w-full text-sm text-left">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b bg-gray-100 text-gray-700">
               <th className="p-2">Product</th>
-              <th className="p-2">Code</th>
               <th className="p-2">Category</th>
               <th className="p-2">Purchase Price</th>
-              <th className="p-2">Selling Price</th>
-              <th className="p-2">Stock</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Supplier</th>
+              <th className="p-2">Purchased</th>
+              <th className="p-2">Sold</th>
+              <th className="p-2">In Stock</th>
               <th className="p-2">Purchase History</th>
+              <th className="p-2">Sales History</th>
             </tr>
           </thead>
           <tbody>
-            {inventory.length === 0 ? (
-              <tr><td colSpan="9" className="text-gray-400 italic p-4">No inventory yet.</td></tr>
+            {filteredInventory.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="text-center text-gray-400 italic p-4">
+                  No matching inventory found.
+                </td>
+              </tr>
             ) : (
-              inventory.map((item, idx) => (
-                <tr key={idx} className="border-b">
-                  <td className="p-2">{item.product}</td>
-                  <td className="p-2"><span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">{item.code}</span></td>
-                  <td className="p-2"><span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">{item.category}</span></td>
+              filteredInventory.map((item, idx) => (
+                <tr key={idx} className="border-b hover:bg-gray-50">
+                  <td className="p-2 font-medium">{item.product}</td>
+                  <td className="p-2">
+                    <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                      {item.category}
+                    </span>
+                  </td>
                   <td className="p-2">AED {item.purchasePrice.toFixed(2)}</td>
-                  <td className="p-2 font-bold">AED {item.sellingPrice.toFixed(2)}</td>
-                  <td className="p-2">{item.stock} units</td>
-                  <td className="p-2"><span className="bg-green-100 text-green-700 px-2 py-1 rounded">In Stock</span></td>
-                  <td className="p-2">{item.supplier}</td>
-                  <td className="p-2 whitespace-pre">
-                    {item.history.map((h, i) => (
+                  <td className="p-2 text-green-700">{item.purchaseQty}</td>
+                  <td className="p-2 text-red-700">{item.saleQty}</td>
+                  <td className="p-2 font-semibold">{item.stock}</td>
+                  <td className="p-2 whitespace-pre-wrap text-green-700">
+                    {item.purchaseHistory.map((h, i) => (
                       <div key={i}>{h.date}: +{h.quantity}</div>
+                    ))}
+                  </td>
+                  <td className="p-2 whitespace-pre-wrap text-red-700">
+                    {item.saleHistory.map((h, i) => (
+                      <div key={i}>{h.date}: -{h.quantity}</div>
                     ))}
                   </td>
                 </tr>
@@ -57,30 +156,6 @@ const Inventory = () => {
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* PENDING RECEIPTS */}
-      <div className="border rounded p-4">
-        <h2 className="text-lg font-semibold mb-1">Pending Receipts</h2>
-        <p className="text-sm text-gray-500 mb-4">Approved purchase orders awaiting receipt</p>
-
-        {pendingReceipts.length === 0 ? (
-          <p className="text-gray-400 italic">No pending receipts.</p>
-        ) : (
-          pendingReceipts.map((receipt, idx) => (
-            <div key={idx} className="border rounded p-4 mb-3 bg-white shadow-sm">
-              <p><strong>Purchase Order:</strong> {receipt.poNumber}</p>
-              <p><strong>Supplier:</strong> {receipt.supplier}</p>
-              <p>{receipt.product} - Quantity: {receipt.quantity}</p>
-              <button
-                onClick={() => dispatch(receiveInventory(receipt.poNumber))}
-                className="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Receive Inventory
-              </button>
-            </div>
-          ))
-        )}
       </div>
     </div>
   );

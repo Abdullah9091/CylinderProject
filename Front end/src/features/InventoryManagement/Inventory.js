@@ -27,27 +27,63 @@ const initialState = {
       received: false,
     }
   ],
-  inventory: [], // ✅ NEW inventory list
+  inventory: [],
 };
 
 const inventorySlice = createSlice({
   name: 'inventory',
   initialState,
   reducers: {
+    // Add a new receipt
+    addReceipt: (state, action) => {
+      const {
+        poNumber,
+        supplier,
+        product,
+        code,
+        category,
+        purchasePrice,
+        sellingPrice,
+        quantity,
+        date
+      } = action.payload;
+
+      const exists = state.receipts.find(r => r.poNumber === poNumber);
+      if (!exists) {
+        state.receipts.push({
+          poNumber,
+          supplier,
+          product,
+          code,
+          category,
+          purchasePrice,
+          sellingPrice,
+          quantity,
+          date,
+          received: false,
+        });
+      }
+    },
+
+    // Mark receipt as received and update inventory
     receiveInventory: (state, action) => {
-      const receipt = state.receipts.find(r => r.poNumber === action.payload);
+      const poNumber = action.payload;
+      const receipt = state.receipts.find(r => r.poNumber === poNumber);
+
       if (receipt && !receipt.received) {
         receipt.received = true;
 
-        // Check if item already exists in inventory
-        const existing = state.inventory.find(item => item.code === receipt.code);
+        const itemIndex = state.inventory.findIndex(item => item.code === receipt.code);
 
-        if (existing) {
-          // Update stock and history
-          existing.stock += receipt.quantity;
-          existing.history.push({ date: receipt.date, quantity: receipt.quantity });
+        if (itemIndex !== -1) {
+          // Update existing inventory item
+          state.inventory[itemIndex].stock += receipt.quantity;
+          state.inventory[itemIndex].history.push({
+            date: receipt.date,
+            quantity: receipt.quantity
+          });
         } else {
-          // Add new item to inventory
+          // Add new inventory item
           state.inventory.push({
             product: receipt.product,
             code: receipt.code,
@@ -57,7 +93,12 @@ const inventorySlice = createSlice({
             sellingPrice: receipt.sellingPrice,
             stock: receipt.quantity,
             status: 'In Stock',
-            history: [{ date: receipt.date, quantity: receipt.quantity }],
+            history: [
+              {
+                date: receipt.date,
+                quantity: receipt.quantity
+              }
+            ]
           });
         }
       }
@@ -65,5 +106,5 @@ const inventorySlice = createSlice({
   },
 });
 
-export const { receiveInventory } = inventorySlice.actions;
+export const { addReceipt, receiveInventory } = inventorySlice.actions;
 export default inventorySlice.reducer;
