@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api/employees';
 
-
 // Add new employee
 export const addEmployeeToBackend = createAsyncThunk(
   'employees/addEmployeeToBackend',
@@ -55,7 +54,6 @@ export const updateEmployeeInBackend = createAsyncThunk(
     }
   }
 );
-
 
 const employeeSlice = createSlice({
   name: 'employees',
@@ -120,4 +118,7 @@ const employeeSlice = createSlice({
 });
 
 export const { toggleStatus } = employeeSlice.actions;
+
+export const selectEmployees = (state) => state.employees.list;
+
 export default employeeSlice.reducer;

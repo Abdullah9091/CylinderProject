@@ -7,29 +7,23 @@ import { fetchSales } from '../features/SalesSlice/Sales';
 const Dashboard = () => {
   const dispatch = useDispatch();
 
-  // Fetch sales and customers when dashboard mounts
   useEffect(() => {
     dispatch(fetchCustomers());
     dispatch(fetchSales());
   }, [dispatch]);
 
-  // Access customers from Redux
   const { customers } = useSelector((state) => state.customers);
   const totalCustomers = customers?.length || 0;
 
-  // Access sales from Redux
   const { sales } = useSelector((state) => state.sales);
 
-  // ✅ Total products sold
   const totalProductsSold = sales?.reduce((total, sale) => {
     const saleTotalProducts = sale.products?.reduce((sum, product) => sum + product.quantity, 0);
     return total + saleTotalProducts;
   }, 0) || 0;
 
-  // ✅ Total revenue (based on paid amount, not total invoice)
   const totalRevenue = sales?.reduce((sum, sale) => sum + Number(sale.paid || 0), 0) || 0;
 
-  // Placeholder value for cylinder services (you can later fetch from backend)
   const cylinderServices = 15;
 
   return (

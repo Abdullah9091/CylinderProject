@@ -36,26 +36,32 @@ const Sidebar = () => {
             <SidebarLink icon={<FiActivity />} label="Inventory" to="/inventory" />
             <SidebarLink icon={<FiUsers />} label="Customers" to="/customers" />
             <SidebarLink icon={<FiTrendingUp />} label="Gas Sales" to="/gas-sales" />
+             <SidebarLink icon={<FiUsers />} label="Employees" to="/employees"/>
             <SidebarLink icon={<FiBox />} label="Cylinders" to="/cylinders" />
-                        <SidebarLink icon={<FiFileText />} label="Reports" to="/reports" />
+            <SidebarLink icon={<FiFileText />} label="Reports" to="/reports" />
 
           </>
         )}
 
         {/* Shared Links for Admin and Employee */}
-        {[ 'employee'].includes(role) && (
+        {['employee'].includes(role) && (
           <>
             <SidebarLink icon={<FiActivity />} label="Inventory"
-                          to={role === 'admin' ? '/inventory' : '/inventorysys'}
+              to={role === 'admin' ? '/inventory' : '/inventorysys'}
 
-              />
+            />
             <SidebarLink
               icon={<FiUsers />}
               label="Employees"
               to={role === 'admin' ? '/employees' : '/employee-management'}
             />
-            <SidebarLink icon={<FiFileText />} label="Reports" to="/reports" />
-            <SidebarLink icon={<FiPieChart />} label="P&L" to="/pl" />
+            <SidebarLink icon={<FiFileText />}
+
+             label="Reports" 
+
+             to={role ==='admin' ? '/reports' : '/report-sys' }/>
+            
+
           </>
         )}
       </nav>
@@ -67,10 +73,9 @@ const SidebarLink = ({ icon, label, to }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-200 ${
-        isActive
-          ? 'bg-blue-100 text-blue-600 font-semibold'
-          : 'text-gray-700 hover:bg-gray-100 hover:text-blue-500'
+      `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-200 ${isActive
+        ? 'bg-blue-100 text-blue-600 font-semibold'
+        : 'text-gray-700 hover:bg-gray-100 hover:text-blue-500'
       }`
     }
   >

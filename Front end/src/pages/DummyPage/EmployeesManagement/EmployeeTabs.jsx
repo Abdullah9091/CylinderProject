@@ -2,8 +2,6 @@ import React from 'react';
 
 const tabs = [
   { key: 'employees', label: 'Employees' },
-  { key: 'stock', label: 'Stock Assignment' },
-  { key: 'notifications', label: 'Notifications' }
 ];
 
 const TabNavigation = ({ activeTab, setActiveTab }) => {

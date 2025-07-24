@@ -14,17 +14,16 @@ import { MdOutlineCheck } from "react-icons/md";
 import { IoEyeOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 
+// ... (imports stay the same)
 const App = () => {
   const dispatch = useDispatch();
   const { purchases, showForm, activeTab, selectedPurchase } = useSelector((state) => state.purchase);
   const supplierList = useSelector((state) => state.suppliers.list);
 
   const [supplier, setSupplier] = useState('');
-  const [expectedDelivery, setExpectedDelivery] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedGas, setSelectedGas] = useState('');
-
-  // New Fields
   const [gasKg, setGasKg] = useState('');
   const [gasPricePerKg, setGasPricePerKg] = useState('');
   const [cylinderCount, setCylinderCount] = useState('');
@@ -37,12 +36,27 @@ const App = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    let total = 0;
+    if (selectedGas === 'Gas') {
+      const kg = parseFloat(gasKg);
+      const pricePerKg = parseFloat(gasPricePerKg);
+      if (!isNaN(kg) && !isNaN(pricePerKg)) {
+        total = kg * pricePerKg;
+      }
+    } else if (selectedGas === 'Cylinder') {
+      const count = parseInt(cylinderCount);
+      const price = parseFloat(cylinderPrice);
+      if (!isNaN(count) && !isNaN(price)) {
+        total = count * price;
+      }
+    }
+
     const newPurchase = {
       id: `PO-${Date.now()}`,
       supplier,
-      orderDate: new Date().toISOString().split('T')[0],
-      expectedDelivery,
-      total: 'AED 0.00',
+      orderDate: purchaseDate,
+      total: `AED ${total.toFixed(2)}`,
       status: 'pending',
       notes,
       gasType: selectedGas,
@@ -51,11 +65,11 @@ const App = () => {
       cylinderCount: selectedGas === 'Cylinder' ? cylinderCount : null,
       cylinderPrice: selectedGas === 'Cylinder' ? cylinderPrice : null,
     };
+
     dispatch(addPurchase(newPurchase));
 
-    // Reset form fields
     setSupplier('');
-    setExpectedDelivery('');
+    setPurchaseDate('');
     setNotes('');
     setSelectedGas('');
     setGasKg('');
@@ -63,6 +77,9 @@ const App = () => {
     setCylinderCount('');
     setCylinderPrice('');
   };
+
+  // ... (the rest of the component remains unchanged)
+
 
   return (
     <div className="min-h-screen bg-white p-6 relative">
@@ -88,75 +105,69 @@ const App = () => {
         >
           Purchase Orders
         </button>
-        
       </div>
 
       {/* TABLE */}
-      
-        <div className="bg-white border rounded p-4">
-          <h2 className="text-xl font-semibold mb-1">Purchase Orders</h2>
-          <p className="text-sm text-gray-500 mb-4">All purchase orders and their status</p>
+      <div className="bg-white border rounded p-4">
+        <h2 className="text-xl font-semibold mb-1">Purchase Orders</h2>
+        <p className="text-sm text-gray-500 mb-4">All purchase orders and their status</p>
 
-          <table className="w-full text-left border-t">
-            <thead>
-              <tr className="text-sm text-gray-600">
-                <th className="py-2">PO Number</th>
-                <th>Supplier</th>
-                <th>Order Date</th>
-                <th>Expected Delivery</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Actions</th>
+        <table className="w-full text-left border-t">
+          <thead>
+            <tr className="text-sm text-gray-600">
+              <th className="py-2">PO Number</th>
+              <th>Supplier</th>
+              <th>Purchase Date</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {purchases.map((po) => (
+              <tr key={po.id} className="border-t text-sm">
+                <td className="py-2">{po.id}</td>
+                <td>{po.supplier}</td>
+                <td>{po.orderDate}</td>
+                <td>{po.total}</td>
+                <td>
+                  <span
+                    className={`px-3 py-1 rounded text-xs ${
+                      po.status === 'approved'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {po.status}
+                  </span>
+                </td>
+                <td className="space-x-1">
+                  <button
+                    className="border p-1 rounded hover:bg-gray-100"
+                    onClick={() => dispatch(setSelectedPurchase(po))}
+                  >
+                    <IoEyeOutline />
+                  </button>
+                  {po.status === 'pending' && (
+                    <button
+                      className="border p-1 rounded hover:bg-gray-100"
+                      onClick={() => dispatch(approvePurchase(po.id))}
+                    >
+                      <MdOutlineCheck />
+                    </button>
+                  )}
+                  <button
+                    className="border p-1 rounded hover:bg-gray-100"
+                    onClick={() => dispatch(removePurchase(po.id))}
+                  >
+                    <RxCross2 />
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {purchases.map((po) => (
-                <tr key={po.id} className="border-t text-sm">
-                  <td className="py-2">{po.id}</td>
-                  <td>{po.supplier}</td>
-                  <td>{po.orderDate}</td>
-                  <td>{po.expectedDelivery}</td>
-                  <td>{po.total}</td>
-                  <td>
-                    <span
-                      className={`px-3 py-1 rounded text-xs ${
-                        po.status === 'approved'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {po.status}
-                    </span>
-                  </td>
-                  <td className="space-x-1">
-                    <button
-                      className="border p-1 rounded hover:bg-gray-100"
-                      onClick={() => dispatch(setSelectedPurchase(po))}
-                    >
-                      <IoEyeOutline />
-                    </button>
-                    {po.status === 'pending' && (
-                      <button
-                        className="border p-1 rounded hover:bg-gray-100"
-                        onClick={() => dispatch(approvePurchase(po.id))}
-                      >
-                        <MdOutlineCheck />
-                      </button>
-                    )}
-                    <button
-                      className="border p-1 rounded hover:bg-gray-100"
-                      onClick={() => dispatch(removePurchase(po.id))}
-                    >
-                      <RxCross2 />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      
-      
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* VIEW PURCHASE MODAL */}
       {selectedPurchase && (
@@ -171,23 +182,21 @@ const App = () => {
             <h3 className="text-lg font-bold mb-4">Purchase Details</h3>
             <p><strong>ID:</strong> {selectedPurchase.id}</p>
             <p><strong>Supplier:</strong> {selectedPurchase.supplier}</p>
-            <p><strong>Order Date:</strong> {selectedPurchase.orderDate}</p>
-            <p><strong>Expected Delivery:</strong> {selectedPurchase.expectedDelivery}</p>
+            <p><strong>Purchase Date:</strong> {selectedPurchase.orderDate}</p>
             <p><strong>Total:</strong> {selectedPurchase.total}</p>
             <p><strong>Status:</strong> {selectedPurchase.status}</p>
             <p><strong>Purchase Type:</strong> {selectedPurchase.gasType || 'N/A'}</p>
             <p><strong>Notes:</strong> {selectedPurchase.notes || 'None'}</p>
             {selectedPurchase.gasType === 'Gas' && (
-  <p>
-    <strong>Gas Details:</strong> {selectedPurchase.gasKg} KG @ AED {selectedPurchase.gasPricePerKg}/KG
-  </p>
-)}
-
-{selectedPurchase.gasType === 'Cylinder' && (
-  <p>
-    <strong>Cylinder Details:</strong> {selectedPurchase.cylinderCount} units @ AED {selectedPurchase.cylinderPrice}/Cylinder
-  </p>
-)}
+              <p>
+                <strong>Gas Details:</strong> {selectedPurchase.gasKg} KG @ AED {selectedPurchase.gasPricePerKg}/KG
+              </p>
+            )}
+            {selectedPurchase.gasType === 'Cylinder' && (
+              <p>
+                <strong>Cylinder Details:</strong> {selectedPurchase.cylinderCount} units @ AED {selectedPurchase.cylinderPrice}/Cylinder
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -222,13 +231,13 @@ const App = () => {
                 </select>
               </div>
 
-              {/* Expected Delivery */}
+              {/* Purchase Date */}
               <div className="mb-3">
-                <label className="block text-sm font-medium mb-1">Expected Delivery Date</label>
+                <label className="block text-sm font-medium mb-1">Purchase Date</label>
                 <input
                   type="date"
-                  value={expectedDelivery}
-                  onChange={(e) => setExpectedDelivery(e.target.value)}
+                  value={purchaseDate}
+                  onChange={(e) => setPurchaseDate(e.target.value)}
                   className="w-full border rounded px-3 py-2"
                   required
                 />

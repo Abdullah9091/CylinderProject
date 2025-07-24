@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import TabNavigation from './EmployeeTabs';
 import EmployeeTable from './EmployeeList';
-import AssignStockModal from './AssignStockModal';
 import AddEmployeeModal from './AddEmployeeModal';
-import StockAssignments from './StockAssignments';
 
 const EmployeeManagement = () => {
   const [activeTab, setActiveTab] = useState('employees');
@@ -51,7 +49,6 @@ const EmployeeManagement = () => {
     ));
   };
 
-  // ✅ Edit Employee
   const handleEditEmployee = (emp) => {
     setEditingEmployeeId(emp.id);
     setFormData({
@@ -62,15 +59,8 @@ const EmployeeManagement = () => {
     setShowAddModal(true);
   };
 
-  // ✅ Handle Stock Assignment from Modal
-  const handleAssignStock = (assignment) => {
-    setAssignments(prev => [...prev, assignment]);
-    setShowStockModal(false);
-  };
-
   return (
     <div className="p-6">
-      {/* Top Bar */}
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-2xl font-bold">Employee Management</h1>
@@ -88,12 +78,7 @@ const EmployeeManagement = () => {
           >
             + Add Employee
           </button>
-          <button
-            onClick={() => setShowStockModal(true)}
-            className="bg-white border px-4 py-2 rounded hover:bg-gray-100 transition"
-          >
-            📦 Assign Stock
-          </button>
+          
         </div>
       </div>
 

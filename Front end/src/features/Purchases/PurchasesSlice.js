@@ -1,4 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSelector } from '@reduxjs/toolkit';
+
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5000/api/purchases';
@@ -83,6 +85,13 @@ const purchaseSlice = createSlice({
   },
 });
 
+export const selectPurchases = (state) => state.purchase.purchases;
+
+export const selectPurchaseTypes = createSelector(
+  [selectPurchases],
+  (purchases) =>
+    [...new Set(purchases.map((p) => p.gasType).filter(Boolean))]
+);
 
 
 export const {

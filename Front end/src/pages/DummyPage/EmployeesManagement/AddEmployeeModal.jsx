@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addEmployeeToBackend } from '../../../features/EmployeesSlice/Employees'; // adjust path as needed
+import { addEmployeeToBackend } from '../../../features/EmployeesSlice/Employees'; // Adjust the path based on your folder structure
 
 const AddEmployeeModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -37,7 +37,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
       <form
         onSubmit={handleSubmit}
         autoComplete="off"
@@ -51,7 +51,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
           value={formData.name}
           onChange={handleChange}
           placeholder="Name"
-          className="border w-full p-2 mb-3"
+          className="border w-full p-2 mb-3 rounded"
           required
         />
 
@@ -61,7 +61,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
           value={formData.email}
           onChange={handleChange}
           placeholder="Email"
-          className="border w-full p-2 mb-3"
+          className="border w-full p-2 mb-3 rounded"
           required
           autoComplete="new-email"
         />
@@ -72,7 +72,7 @@ const AddEmployeeModal = ({ isOpen, onClose }) => {
           value={formData.password}
           onChange={handleChange}
           placeholder="Password"
-          className="border w-full p-2 mb-4"
+          className="border w-full p-2 mb-4 rounded"
           required
           autoComplete="new-password"
         />

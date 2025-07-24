@@ -1,164 +1,170 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchPurchases } from '../../../features/Purchases/PurchasesSlice';
-import { fetchSales } from '../../../features/SalesSlice/Sales';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchPurchases,
+  setSelectedPurchase,
+} from '../../../features/Purchases/PurchasesSlice';
+import { fetchSuppliers } from '../../../features/suppliers/suppliersSlice';
+import SaleRecord from './SaleRecord';
 
-const Inventory = () => {
+const App = () => {
   const dispatch = useDispatch();
-  const purchases = useSelector((state) => state.purchase.purchases);
-  const purchaseStatus = useSelector((state) => state.purchase.status);
-  const purchaseError = useSelector((state) => state.purchase.error);
+  const { purchases, selectedPurchase } = useSelector((state) => state.purchase);
+  const supplierList = useSelector((state) => state.suppliers.list);
 
-  const sales = useSelector((state) => state.sales?.sales || []);
-  const salesStatus = useSelector((state) => state.sales.status);
-  const salesError = useSelector((state) => state.sales.error);
-
+  const [view, setView] = useState('purchase');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
-    if (purchaseStatus === 'idle') dispatch(fetchPurchases());
-    if (salesStatus === 'idle') dispatch(fetchSales());
-  }, [dispatch, purchaseStatus, salesStatus]);
+    dispatch(fetchSuppliers());
+    dispatch(fetchPurchases());
+  }, [dispatch]);
 
-  // Show loading state
-  if (purchaseStatus === 'loading' || salesStatus === 'loading') {
-    return <div className="p-6 text-gray-600">Loading inventory data...</div>;
-  }
-
-  // Show error state
-  if (purchaseStatus === 'failed' || salesStatus === 'failed') {
-    return (
-      <div className="p-6 text-red-600">
-        Error loading data:
-        <div>{purchaseError || 'Purchase error not specified'}</div>
-        <div>{salesError || 'Sales error not specified'}</div>
-      </div>
-    );
-  }
-
-  // Group approved purchases
-  const groupedPurchases = purchases
-    .filter((p) => p.approved)
-    .reduce((acc, purchase) => {
-      const key = purchase.code;
-      if (!acc[key]) {
-        acc[key] = {
-          product: purchase.product,
-          code: purchase.code,
-          category: purchase.category,
-          supplier: purchase.supplier,
-          purchasePrice: purchase.purchasePrice,
-          purchaseQty: purchase.quantity,
-          saleQty: 0,
-          stock: purchase.quantity,
-          purchaseHistory: [{ date: purchase.date, quantity: purchase.quantity }],
-          saleHistory: [],
-        };
-      } else {
-        acc[key].purchaseQty += purchase.quantity;
-        acc[key].stock += purchase.quantity;
-        acc[key].purchaseHistory.push({ date: purchase.date, quantity: purchase.quantity });
-      }
-      return acc;
-    }, {});
-
-  // Subtract sold quantities
-  sales
-    .filter((s) => s.approved)
-    .forEach((sale) => {
-      const key = sale.code;
-      if (groupedPurchases[key]) {
-        groupedPurchases[key].saleQty += sale.quantity;
-        groupedPurchases[key].stock -= sale.quantity;
-        groupedPurchases[key].saleHistory.push({ date: sale.date, quantity: sale.quantity });
-      }
-    });
-
-  const inventoryList = Object.values(groupedPurchases);
-
-  const filteredInventory = inventoryList.filter(
-    (item) =>
-      item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter and Paginate
+  const filteredPurchases = purchases.filter((po) =>
+    po.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalStock = inventoryList.reduce((sum, item) => sum + item.stock, 0);
+  const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage);
+  const startIdx = (currentPage - 1) * itemsPerPage;
+  const currentPurchases = filteredPurchases.slice(startIdx, startIdx + itemsPerPage);
+
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <h1 className="text-2xl font-bold mb-1">Inventory Management</h1>
-      <p className="text-gray-500 mb-6">Track and manage your cylinder and gas stock</p>
-
-      {/* Search and Total Stock */}
-      <div className="flex justify-between items-center mb-4">
-        <input
-          type="text"
-          placeholder="Search by product or category..."
-          className="border px-3 py-2 rounded shadow-sm w-72"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <div className="text-sm text-gray-600">
-          <strong>Total Stock:</strong> {totalStock} units
-        </div>
+    <div className="min-h-screen bg-white p-6 relative">
+      {/* View Toggle Buttons */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          onClick={() => setView('purchase')}
+          className={`px-4 py-2 rounded font-semibold border ${
+            view === 'purchase' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+          }`}
+        >
+          Purchase Record
+        </button>
+        <button
+          onClick={() => setView('sales')}
+          className={`px-4 py-2 rounded font-semibold border ${
+            view === 'sales' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+          }`}
+        >
+          Sale Record
+        </button>
       </div>
 
-      {/* Inventory Table */}
-      <div className="border rounded p-4 bg-gray-50 shadow">
-        <h2 className="text-xl font-semibold mb-2">Current Inventory</h2>
-        <p className="text-sm text-gray-500 mb-4">Based on approved purchases and sales</p>
+      {view === 'purchase' && (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-2xl font-bold">Purchase Management</h1>
+              <p className="text-gray-500">Create and manage purchase orders from suppliers</p>
+            </div>
 
-        <table className="min-w-full text-sm text-left">
-          <thead>
-            <tr className="border-b bg-gray-100 text-gray-700">
-              <th className="p-2">Product</th>
-              <th className="p-2">Category</th>
-              <th className="p-2">Purchase Price</th>
-              <th className="p-2">Purchased</th>
-              <th className="p-2">Sold</th>
-              <th className="p-2">In Stock</th>
-              <th className="p-2">Purchase History</th>
-              <th className="p-2">Sales History</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredInventory.length === 0 ? (
-              <tr>
-                <td colSpan="8" className="text-center text-gray-400 italic p-4">
-                  No matching inventory found.
-                </td>
-              </tr>
-            ) : (
-              filteredInventory.map((item, idx) => (
-                <tr key={idx} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-medium">{item.product}</td>
-                  <td className="p-2">
-                    <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                      {item.category}
-                    </span>
-                  </td>
-                  <td className="p-2">AED {item.purchasePrice.toFixed(2)}</td>
-                  <td className="p-2 text-green-700">{item.purchaseQty}</td>
-                  <td className="p-2 text-red-700">{item.saleQty}</td>
-                  <td className="p-2 font-semibold">{item.stock}</td>
-                  <td className="p-2 whitespace-pre-wrap text-green-700">
-                    {item.purchaseHistory.map((h, i) => (
-                      <div key={i}>{h.date}: +{h.quantity}</div>
-                    ))}
-                  </td>
-                  <td className="p-2 whitespace-pre-wrap text-red-700">
-                    {item.saleHistory.map((h, i) => (
-                      <div key={i}>{h.date}: -{h.quantity}</div>
-                    ))}
-                  </td>
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search PO Number..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // reset to first page on search
+              }}
+              className="border rounded px-3 py-1 text-sm"
+            />
+          </div>
+
+          <div className="bg-white border rounded p-4">
+            <h2 className="text-xl font-semibold mb-1">Purchase Orders</h2>
+            <p className="text-sm text-gray-500 mb-4">All purchase orders and their status</p>
+
+            {/* Table */}
+            <table className="w-full text-left border-t">
+              <thead>
+                <tr className="text-sm text-gray-600">
+                  <th className="py-2">PO Number</th>
+                  <th>Supplier</th>
+                  <th>Purchase Date</th>
+                  <th>Total</th>
+                  <th>Status</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {currentPurchases.length > 0 ? (
+                  currentPurchases.map((po) => (
+                    <tr key={po.id} className="border-t text-sm">
+                      <td className="py-2">{po.id}</td>
+                      <td>{po.supplier}</td>
+                      <td>{po.orderDate}</td>
+                      <td>{po.total}</td>
+                      <td>
+                        <span
+                          className={`px-3 py-1 rounded text-xs ${
+                            po.status === 'approved'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {po.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-gray-500">
+                      No results found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          {/* Optional Modal View for PO Details */}
+          {selectedPurchase && (
+            <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
+                <button
+                  onClick={() => dispatch(setSelectedPurchase(null))}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  &times;
+                </button>
+                {/* Add more details if needed */}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {view === 'sales' && <SaleRecord />}
     </div>
   );
 };
 
-export default Inventory;
+export default App;
